@@ -100,5 +100,29 @@ hdifinal
 
 ############################################TASK 2############################################
 
+#Reading in the data - Only reading in the first 4 lines so we can decide how to read in the data
+file <- "http://www.ndbc.noaa.gov/view_text_file.php?filename=44025h2011.txt.gz&dir=data/historical/stdmet/"
+buoy <- readLines("data/buoy.txt", n = 4)
+buoy
 
+#Reading in the data using read_table and skipping the first 2 lines as they contain the names and units
+buoy2 <- read_table("data/buoy.txt", 
+              col_names = FALSE,
+              skip = 2)
 
+#Using scan() to read in appropriate lines, tidy the data and name the columns measure_units
+?scan()
+?str_remove()
+buoy3 <- scan("data/buoy.txt", what = "character", n = 4)
+
+#Reading in the variable names and removing the hash from the first variable name - #YY becomes YY
+names <- scan(file, nlines = 1, what = character()) %>% 
+  str_remove("#")
+
+#Reading in the units in the second row, removing the hash from the first unit and replacing / with "_per_" as / is treated as a special character
+units <- scan(file, skip = 1, nlines = 1, what = character()) %>% 
+  str_remove("#") %>% 
+  str_replace("/", "_per_")
+
+#Pasting variable names and units together separated by _ to create the column names
+names(buoy2) <- paste(names, units, sep = "_") 
