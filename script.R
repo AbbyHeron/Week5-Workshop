@@ -126,3 +126,56 @@ units <- scan(file, skip = 1, nlines = 1, what = character()) %>%
 
 #Pasting variable names and units together separated by _ to create the column names
 names(buoy2) <- paste(names, units, sep = "_") 
+
+############################################TASK 3############################################
+
+#Importing data but the headers are mainly in the 3rd row so must skip the first 2 rows
+
+#Reading in the data
+filesol <- "data/Y101_Y102_Y201_Y202_Y101-5.csv"
+
+#Skip first 2 rows as they dont include important info and tidy
+sol <- read_csv(filesol, skip = 2) %>% 
+  janitor::clean_names()
+
+#Filter the data to keep rows of human proteins identified by more than one peptide
+sol <- sol %>% 
+  filter(str_detect(description, "OS=Homo sapiens")) %>% 
+  filter(x1pep == "x")
+
+#Extract genename from the description and put it into a column
+sol <- sol %>%
+  mutate(genename =  str_extract(description,"GN=[^\\s]+") %>% 
+           str_replace("GN=", ""))
+
+#Extract top protein identifier and put in column protid
+sol <- sol %>%
+  mutate(protid =  str_extract(accession, ".::[^|;]+") %>% 
+           str_replace(".::", ""))
+
+#Reading in a new dataframe to create a column for protein abundance and cell lineage and replicate
+filesol <- "data/Y101_Y102_Y201_Y202_Y101-5.csv"
+
+#Skip first 2 rows as they dont include important info and tidy
+sol2 <- read_csv(filesol, skip = 2) %>% 
+  janitor::clean_names()
+
+#Converting the data to tidy format - giving abundance and lineage_rep their own column
+sol2 <- sol2 %>% 
+  pivot_longer(names_to = "lineage_rep",
+               values_to = "abundance",
+               cols = -c(accession, peptide_count, unique_peptides, confidence_score, anova_p, q_value,
+                         max_fold_change, power, highest_mean_condition, lowest_mean_condition, mass, description, x1pep))
+
+#Creating unique columns for lineage and rep
+#NOT FINISHED
+names <- scan(sol2, nlines = 1, what = character()) %>% 
+  str_remove("_")
+
+#NOT FINISHED
+units <- scan(file, skip = 1, nlines = 1, what = character()) %>% 
+  str_remove("#") %>% 
+  str_replace("/", "_per_")
+
+#NOT FINISHED
+names(buoy2) <- paste(names, units, sep = "_") 
